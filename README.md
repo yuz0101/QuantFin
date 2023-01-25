@@ -63,9 +63,9 @@ sample.groupby(['date'])['mom'].skew().mean()
 sample.groupby(['date'])['mom'].apply(lambda x: x.kurt()).mean()
 samp_ret = sample.groupby(['port', 'date'])['ret'].mean().unstack().T
 np.log(samp_ret+1).cumsum().plot(figsize=(16,8))
-
-![Momentum Portfolios Returns](momPortsRets.png)
 ```
+![Momentum Portfolios Returns](momPortsRets.png)
+
 Show the performance summary of portfolios, including mean returns and alphas(FF3 or FF5):
 ```python
 from QuantFin import Performance
