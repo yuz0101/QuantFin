@@ -12,6 +12,7 @@ Momentum Effects
 
 ```Python
 
+import numpy as np
 import pandas as pd
 from QuantFin import univariate_sorting, rollingGeometricReturn
 
@@ -73,18 +74,5 @@ from QuantFin import Performance
 # column names of portfolio labels and an index of datetime (if model is specified).
 samp_ret['10-1'] = samp_ret.loc[:, 10] - samp_ret.loc[:, 1]
 print(Performance(samp_ret, model='FF5').summary())
-
-                      Mean        Alpha(FF5)
-Portfolio                                   
-1            0.72*\n(1.77)      0.06\n(0.22)
-2          0.85***\n(2.92)      0.13\n(0.88)
-3          0.99***\n(3.97)     0.20*\n(1.91)
-4          1.09***\n(4.88)   0.29***\n(3.66)
-5          1.16***\n(5.67)   0.35***\n(6.07)
-6          1.28***\n(6.46)   0.45***\n(9.80)
-7          1.36***\n(6.90)  0.56***\n(12.39)
-8          1.50***\n(7.38)  0.72***\n(12.84)
-9          1.63***\n(7.29)  0.87***\n(11.85)
-10         1.83***\n(6.57)   1.13***\n(9.88)
-10-1       1.11***\n(3.69)   1.07***\n(3.45)
 ```
+![Momentum Portfolios Returns](momRetsMean.png)
