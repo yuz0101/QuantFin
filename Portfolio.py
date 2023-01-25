@@ -11,13 +11,13 @@ from QuantFin._deciles import *
 
 class Performance:
 
-    def __init__(self, data: DataFrame, freq: str = 'M', model: str = 'FF3',
+    def __init__(self, data: DataFrame, freq: str = 'M', model: str = 'FF3', capm: bool = True,
                  datename: str = 'date'):
         """
         Parameters
         ----------
         df: DataFrame
-            A DataFrame of portfolios returns with columns of portfolio 
+            A DataFrame of portfolios returns with columns labels of portfolio 
             names and an index of datetime.
 
         freq: str
@@ -25,13 +25,16 @@ class Performance:
             daily(D) and yearly(Y). Default is 'M'.
 
         model: str
-            Indicates the benchmark asset pricing models for estimating the 
-            alpha. It will regress portfolios returns on factors. Optional 
+            Indicate the benchmark asset pricing models for estimating the 
+            alpha. It regresses portfolios returns on factors. Optional 
             models are None (for not estimating alpha), Fama-French-3 factor (FF3), 
             Fama-French-5 factor (FF5), and FF3 + MOM (FF4). Default is FF3.
 
         datename: str
-            Indicates the name of datetime index. Default is 'date'
+            Indicate the name of datetime index. Default is 'date'
+        
+        capm: bool
+            Indicate if CAPM model applied
 
         """
         if type(data.index) is not DatetimeIndex:
@@ -43,6 +46,7 @@ class Performance:
         self.model = model
         self.freq = freq
         self.datename = datename
+        self.capm = capm
 
     def _get_factor_data(self):
         _f = KenFrench(self.model, self.freq).get_data()
@@ -99,6 +103,7 @@ class Performance:
         _t = self.stats(self.df, ones(len(self.df)), 'const', 
                         percentage, decimal, **args)
         _t = _t.rename('Mean').to_frame()
+        
         if self.model:
             _f = self._get_factor_data()
             self.df = concat([self.df, _f], axis=1, join='inner')
@@ -107,5 +112,13 @@ class Performance:
                 self.df[_f.columns], 'const', percentage, decimal, **args)
             _ta = _ta.rename(f'Alpha({self.model})')
             _t = concat([_t, _ta], axis=1)
-            _t.index = _t.index.rename('Portfolio')
+        
+        if self.capm:
+            _ta = self.stats(
+                self.df.loc[:, _l], 
+                self.df.loc[:, 'Mkt-RF'], 'const', percentage, decimal, **args)
+            _ta = _ta.rename(f'Alpha(CAPM)')
+            _t = concat([_t, _ta], axis=1)          
+
+        _t.index = _t.index.rename('Portfolio')
         return _t
