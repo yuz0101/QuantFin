@@ -75,4 +75,5 @@ from QuantFin import Performance
 samp_ret['10-1'] = samp_ret.loc[:, 10] - samp_ret.loc[:, 1]
 print(Performance(samp_ret, model='FF5').summary())
 ```
+
 ![Momentum Portfolios Returns](momRetsMean.png)
