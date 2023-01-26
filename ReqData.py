@@ -183,9 +183,8 @@ class KenFrenchLib:
                             l = l[i:]
                             ds.update({1: read_csv(StringIO('date'+l))})
                             break
-
-        freq = freq.lower()
-        if freq in ['y', 'yearly', 'year', 'annual', 'a']:
+                            
+        if _freq == 'annual':
             data = ds[1]
         else:
             data = ds[0]
