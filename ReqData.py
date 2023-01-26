@@ -1,57 +1,82 @@
 # -*- coding: utf-8 -*-
-#import pandas_datareader.data as web
 
 import io
 import os
 import tempfile
-from datetime import datetime
 from zipfile import ZipFile
 
 import requests
 from _io import StringIO
 from bs4 import BeautifulSoup as bs
-from pandas import DataFrame, read_csv, to_datetime
+from pandas import DataFrame, read_csv, read_excel, to_datetime
 from pandas.tseries.offsets import BMonthEnd, BYearEnd
 
 
-class KenFrenchLib:
-    def __init__(self, fpath='./dataKenFrench/'):
-        self.domain = 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/'
+class Req:
+    def __init__(self, fpath='./dataLib/'):
         self.fpath = fpath
         if not os.path.exists(fpath):
             os.mkdir(fpath)
-
-    def show_all(self):
-        """
-        Show all availiable csv file names in Database
-        """
-        home = 'http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html'
-        res = requests.get(home)
-        soup = bs(res.content, 'html.parser')
-        links = soup.find_all(href=True)
-        ls = ''
-        for link in links:
-            if 'CSV.zip' in link['href']:
-                ls = ls + link['href'].split('/')[1].replace('_CSV.zip', '') + '\n'
-        print(ls)
-        return ls
-
-    def _download_file(self, url):
-        print('Downloading file... ...')
+    
+    def _download_file(self, url, name=''):
+        print(f'Downloading file {name}')
         res = requests.get(url, stream=True)
         return res
 
     def _download_zipfile(self, url):
         res = self._download_file(url)
         z = ZipFile(io.BytesIO(res.content))
-        print('Got the zip file.')
         return z
     
-    def _download_and_unzip_file(self, url):
+    def _download_store_unzip_file(self, url):
         z = self._download_zipfile(url)
-        print('Unzip the zip file... ...')
         z.extractall(self.fpath)
-        print('Unzip done.')
+        print('File unzipped and stored in ./dataLib ')
+    
+    def _download_store_excel(self, url, name):
+        res = self._download_file(url, name)
+        with open(self.fpath+name, 'wb') as f:
+            f.write(res.content)
+    
+    def _download_store_csv(self, url, name):
+        res = self._download_file(url, name)
+        res = requests.get(url)
+        df = read_csv(StringIO(res.content.decode()))
+        df.to_csv(self.fpath+name)
+        return df
+    
+    def _download_store_txt(self, url, filename):
+        string = self._download_file(url, filename).text
+        with open(self.fpath+filename, 'w', encoding="utf-8") as f:
+            f.write(string)
+        return string
+    
+
+class KenFrenchLib(Req):
+    """This a class for downloading factor data from Ken.French (http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html)
+    """
+    def __init__(self):
+        super().__init__()
+        self.domain = 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/'
+
+    def show_all(self) -> list:
+        """This is a function for showing all avaiable factor sets.
+
+        Returns:
+            list: this is a list of names for all factor sets listed on Ken.French data library. 
+        """
+        home = 'http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html'
+        res = requests.get(home)
+        soup = bs(res.content, 'html.parser')
+        links = soup.find_all(href=True)
+        ls = ''
+        namelist = []
+        for link in links:
+            if 'CSV.zip' in link['href']:
+                ls = ls + link['href'].split('/')[1].replace('_CSV.zip', '') + '\n'
+                namelist.append(link['href'].split('/')[1].replace('_CSV.zip', ''))
+        print(ls)
+        return namelist
 
     def _get_sic_codes_txt_file(self, ffind):
         try:
@@ -64,7 +89,7 @@ class KenFrenchLib:
             if not f:
                 print(f'Found no Fama-French {ffind} industries definition txt file')
                 url = self.domain + f'Siccodes{ffind}.zip'
-                self._download_and_unzip_file(url)
+                self._download_store_and_unzip_file(url)
                 fs = os.listdir(self.fpath)
                 for _f in fs:
                     if _f.endswith('txt') and str(ffind) in _f:
@@ -127,15 +152,20 @@ class KenFrenchLib:
             sic_dict = None
         return sic_dict
     
-    def get_factors(self, factors: str, freq: str)->DataFrame:
-        """_summary_
+    def get_factors(self, factors: str, freq: str) -> DataFrame:
+        """This is a fucntion for getting a factor data from Ken.French Lib. 
 
         Args:
-            factors (str): The availiable factors are 'MOM', 'FF3', 'FF5' or dataset name
-            freq (str): The frequency of data, e.g., 'D' for daily, 'M' for monthly, 'W' for weekly, 'Y' for yearly, default is 'M'.
+            factors (str): Factor name. Options are 'MOM', 'FF3', 'FF5' or other dataset names.
+                'MOM': Momentum factor data for USA market.
+                'FF3': Factors of SIZE (SMB), VALUE(HML) and Market risk premium(Rm-Rf) for USA markets.
+                'FF5': Factors of SMB, HML, Rm-Rf, RMW and CMA for USA markets.
+                other dataset names can be found by using function of "show_all()".
+
+            freq (str): Indicate the frequency of data, e.g., 'D' for daily, 'M' for monthly, 'W' for weekly, 'Y' or 'A' for annual, default is 'M'.
 
         Returns:
-            DataFrame: _description_
+            DataFrame: A dataframe of factors data with column labels of factor names and an index of datetime in business day format.
         """
 
         freq = freq.lower()
@@ -197,70 +227,64 @@ class KenFrenchLib:
             data.index = to_datetime(data.index, format='%Y%m%d')
         return data/100
 
-"""
-class KenFrench:
-    
-    def __init__(
-            self, factors, freq='M',
-            start_date=datetime(year=1926, month=1, day=1), 
-            end_date=datetime.today()):
-        '''
+class ZhiDaLib(Req):
+    """This is a class for downloading data from Zhi Da's personal website.
+    """
+    def __init__(self):
+        super().__init__()
+        self.domain = 'https://www3.nd.edu/~zda/'
 
-        Parameters
-        ----------
-        factors : str
-            The availiable factors are 'MOM', 'FF3' or dataset name
-        freq: str
-            The frequency of data, e.g., 'D' for daily, 'M' for monthly,
-            'W' for weekly, 'Y' for yearly, default is 'M'.
-        start_date : datetime
-            The start date of a sample, eg., datetime(year=1962, month=1, day=1)
-        end_date : datetime
-            The end date of a sample, eg., datetime(year=2020, month=5, day=30),
-            The default is today's date in datetime.
-        Returns
-        -------
-        None.
-
-        '''
-        self.freq = freq.lower()
+    def get_pear_index(self, update: bool=False, filename: str='PEAR.xlsx') -> DataFrame:
+        """This is a function for getting PEAR index data. Please see the reference for details. Chen, Z., Da, Z., Huang, D. and Wang, L. (2023). Presidential economic approval rating and the cross-section of stock returns. Journal of Financial Economics, 147(1), pp.106-131.
         
-        if freq.lower() == 'w':
-            _freq = '_weekly'
-        elif freq.lower() == 'd':
-            _freq = '_daily'
-        else:
-            _freq = ''
+        Args:
+            update (bool, optional): Indicate if update the stored file. Defaults to False.
         
-        if factors.lower() == 'mom':    
-            self.topic = 'F-F_Momentum_Factor' + _freq
-        elif factors.lower() == 'ff3':
-            self.topic = 'F-F_Research_Data_Factors' + _freq
-        elif factors.lower() == 'ff5':
-            self.topic = 'F-F_Research_Data_5_Factors_2x3' + _freq
+        Returns:
+            DataFrame: This is a dataframe of pear index data with column label of 'PEAR' and a monthly datetime index in the business day format.
+        """
+        
+        if update:
+            self._download_store_excel(self.domain+filename, filename)
+        if os.path.exists(self.fpath+filename):
+            df = read_excel(self.fpath+filename, sheet_name='DATA')
         else:
-            self.topic = factors
-        self.start_date = start_date
-        self.end_date = end_date
-        self.data_dict = self._retreive_data()
-        self.data = self.get_data()
-        self.des = self.get_data_des()
-
-    def _retreive_data(self):
-        data_dict = web.DataReader(
-            self.topic, 'famafrench', self.start_date, self.end_date)    
-        return data_dict
-    
-    def get_data(self):
-        if self.freq == 'y':
-            df = self.data_dict.get(1)/100
-        else:
-            df = self.data_dict.get(0)/100
-        if self.freq != 'd' and self.freq != 'w':
-            df.index = df.index.to_timestamp() + BMonthEnd()
+            res = self._download_store_excel(self.domain+filename, filename)
+            df = read_excel(res.content, sheet_name='DATA')
+        df = df.set_index('yearmonth')
+        df.index = to_datetime(df.index, format='%Y%m').rename('date') + BMonthEnd()
         return df
     
-    def get_data_des(self):
-        data_descr = self.data_dict.get('DESCR')
-        return data_descr
-"""
+    def get_fear_index(self, update: bool=False, filename='fears_post_20140512.csv') -> DataFrame:
+        """This is a function for getting PEAR index data. Please see the reference for details. Da, Z., Engelberg, J., & Gao, P. (2015). The sum of all FEARS investor sentiment and asset prices. The Review of Financial Studies, 28(1), 1-32.
+
+        Args:
+            update (bool, optional): Indicate if update the stored file. Defaults to False.
+            filename (str, optional): Indicate the filename. Defaults to 'fears_post_20140512.csv'.
+
+        Returns:
+            DataFrame: DataFrame: This is a dataframe of pear index data with column label of 'FEAR' and a datetime index.
+        """
+        if update or not os.path.exists(self.fpath+filename):
+            df = self._download_store_csv(self.domain+filename, filename)
+        else:
+            df = read_csv(self.fpath+filename)
+        df.set_index('date', inplace=True)
+        df.index = to_datetime(df.index, format='%m/%d/%Y')
+        return df
+
+    def get_nat_data(self, filename='nat.txt') -> DataFrame:
+        """This is a function for getting NAT data. Please see the reference for details. Chen, Y., Da, Z., & Huang, D. (2019). Arbitrage trading: The long and the short of it. The Review of Financial Studies, 32(4), 1608-1646.
+
+        Args:
+            filename (str, optional): Indicate the filename. Defaults to 'nat.txt'.
+
+        Returns:
+            DataFrame: This is a dataframe of pear index data with column label of 'NAT' and a datetime index
+        """
+        string = self._download_store_txt(self.domain+filename, filename)
+        string = string.split('\r\n\r\n')[4].replace('\t\t','\t')
+        df = read_csv(StringIO(string), sep='\t')
+        df.columns = df.columns.str.lower()
+        df.date = to_datetime(df.date, format='%Y%m%d')
+        return df
