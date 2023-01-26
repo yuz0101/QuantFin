@@ -4,7 +4,7 @@ from pandas import DataFrame, DatetimeIndex, concat, qcut
 
 from QuantFin.HandleError import InputError
 from QuantFin.Regression import OLS
-from QuantFin.ReqData import KenFrench
+from QuantFin.ReqData import KenFrenchLib
 
 from QuantFin._deciles import *
 
@@ -49,7 +49,8 @@ class Performance:
         self.capm = capm
 
     def _get_factor_data(self):
-        _f = KenFrench(self.model, self.freq).get_data()
+        #_f = KenFrench(self.model, self.freq).get_data()
+        _f = KenFrenchLib().get_factors(factors=self.model, freq=self.freq)
         _f.index = _f.index.rename(self.datename)
         try:
             _f = _f[_f.columns.drop('RF')]
@@ -103,7 +104,7 @@ class Performance:
         _t = self.stats(self.df, ones(len(self.df)), 'const', 
                         percentage, decimal, **args)
         _t = _t.rename('Mean').to_frame()
-        
+
         if self.model:
             _f = self._get_factor_data()
             self.df = concat([self.df, _f], axis=1, join='inner')
