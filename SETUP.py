@@ -29,13 +29,12 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent"
     ],
     packages=["QuantFin"],
     include_package_data=True,
-    install_requires=["numpy", "pandas"]
+    install_requires=["numpy", "pandas", "linearmodels", "statemodels"]
 )

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from linearmodels import FamaMacBeth, PanelOLS, BetweenOLS, FirstDifferenceOLS, PooledOLS
-from linearmodels.panel import compare
 import statsmodels.api as sm
+from linearmodels import (BetweenOLS, FamaMacBeth, FirstDifferenceOLS,
+                          PanelOLS, PooledOLS)
+from linearmodels.panel import compare
+
 
 class OLS:
 
@@ -25,20 +27,15 @@ class Panel:
         Parameters
         ----------
         df : pd.DataFrame
-            The panel data with columns of entity, date, regressand and 
-            regressors. 
+            The panel data with columns of entity, date, dependent variable and 
+            independent variables. 
         entity : str
-            The column name of entity, eg., 'permno', which is the 
+            The column name of entity, eg., 'permno', which is the
             permanent number of a security in CRSP database.
         date : str
             The column name of date, eg., 'date'.
         formula : str
-            The regression model, eg., 
-            'dependent_variable(t+1) ~ 1 + independent_variable(t)'.
-
-        Returns
-        -------
-        None.
+            The regression model, eg., 'return ~ 1 + mkt + mom + smb + hml'.
 
         '''
         if df.index.names != [entity, date]:

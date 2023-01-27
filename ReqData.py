@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup as bs
 from pandas import DataFrame, read_csv, read_excel, to_datetime
 from pandas.tseries.offsets import BMonthEnd, BYearEnd
 
-
 class Req:
     def __init__(self, fpath='./dataLib/'):
         self.fpath = fpath

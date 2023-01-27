@@ -2,12 +2,10 @@
 from numpy import ones
 from pandas import DataFrame, DatetimeIndex, concat, qcut
 
+from QuantFin._deciles import *
 from QuantFin.HandleError import InputError
 from QuantFin.Regression import OLS
 from QuantFin.ReqData import KenFrenchLib
-
-from QuantFin._deciles import *
-
 
 class Performance:
 
@@ -44,7 +42,19 @@ class Performance:
                     )
         self.df = data
         self.model = model
-        self.freq = freq
+        if freq.lower() in ['d', 'day', 'daily']:
+            self.freq = 'D'
+            self.annFactor = 252
+        elif freq.lower() in ['m', 'month', 'monthly']:
+            self.freq = 'M'
+            self.annFactor = 12
+        elif freq.lower() in ['y', 'year', 'yearly']:
+            self.freq = 'Y'
+            self.annFactor = 1
+        else:
+            raise InputError(
+                "The arg of 'freq' should be either 'D' for daily, 'M' for monthly or 'Y' for yearly"
+            )
         self.datename = datename
         self.capm = capm
 
@@ -58,11 +68,13 @@ class Performance:
             pass
         return _f
 
-    def stats(self, ys, x, param, percentage, decimal, **args):
+    def stats(self, ys, x, param, percentage, decimal, annualise, **args):
         _tp = ys.apply(lambda y: OLS(y, x, **args).stats(param))
         _m = _tp.iloc[0, :]
         if percentage:
             _m = _m*100
+        if annualise:
+            _m = _m*self.annFactor
         _m = _m.apply(lambda x: format(x, '.2f'))
         _t = _tp.iloc[1, :].apply(
             lambda x: '\n('+format(x, f'.{decimal}f')+')')
@@ -75,7 +87,7 @@ class Performance:
         _tp = _m + _pv + _t
         return _tp
 
-    def summary(self, percentage: bool = True, decimal: int = 2, **args) -> DataFrame:
+    def summary(self, percentage: bool = True, decimal: int = 2, annualise: bool=False, **args) -> DataFrame:
         """
         It reports the summary statistics of portfolios performance, including 
         mean returns and t-values, standard factor models'alpha and relative
@@ -91,6 +103,9 @@ class Performance:
         It indicates the decimals in this summary table would be kept.
         Default is 2.
 
+        annualise: bool
+        It indicates if annulise coefficients. Default is False.
+
         args:
         All arguments related to the statsmodel.api.OLS.fit are applied
         here. e.g., cov_type='HAC', cov_kwds={'maxlags':6} for 
@@ -100,25 +115,34 @@ class Performance:
         -------
         summary: DataFrame
         """
+        if percentage:
+            label_pct = ' (%)'
+        else:
+            label_pct = ''
+        if annualise:
+            label_ann = 'Annualised '
+        else:
+            label_ann = ''
+        
         _l = self.df.columns  # get all portfolio-label names
         _t = self.stats(self.df, ones(len(self.df)), 'const', 
-                        percentage, decimal, **args)
-        _t = _t.rename('Mean').to_frame()
+                        percentage, decimal, annualise, **args)
+        _t = _t.rename(f'{label_ann}Mean{label_pct}').to_frame()
 
         if self.model:
             _f = self._get_factor_data()
             self.df = concat([self.df, _f], axis=1, join='inner')
             _ta = self.stats(
                 self.df[_l], 
-                self.df[_f.columns], 'const', percentage, decimal, **args)
-            _ta = _ta.rename(f'Alpha({self.model})')
+                self.df[_f.columns], 'const', percentage, decimal, annualise, **args)
+            _ta = _ta.rename(f'{label_ann}Alpha({self.model}){label_pct}')
             _t = concat([_t, _ta], axis=1)
         
         if self.capm:
             _ta = self.stats(
                 self.df.loc[:, _l], 
-                self.df.loc[:, 'Mkt-RF'], 'const', percentage, decimal, **args)
-            _ta = _ta.rename(f'Alpha(CAPM)')
+                self.df.loc[:, 'Mkt-RF'], 'const', percentage, decimal, annualise, **args)
+            _ta = _ta.rename(f'{label_ann}Alpha(CAPM){label_pct}')
             _t = concat([_t, _ta], axis=1)          
 
         _t.index = _t.index.rename('Portfolio')
