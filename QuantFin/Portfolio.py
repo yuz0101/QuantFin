@@ -4,7 +4,7 @@ from pandas import DataFrame, DatetimeIndex, concat, qcut
 
 from QuantFin._deciles import *
 from QuantFin.HandleError import InputError
-from QuantFin.Regression import OLS
+from QuantFin._regression import OLS
 from QuantFin.ReqData import KenFrenchLib
 
 
