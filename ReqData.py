@@ -92,7 +92,7 @@ class KenFrenchLib(Req):
             if not f:
                 print(f'Found no Fama-French {ffind} industries definition txt file')
                 url = self.domain + f'Siccodes{ffind}.zip'
-                self._download_store_and_unzip_file(url)
+                self._download_store_unzip_file(url)
                 fs = os.listdir(self.fpath)
                 for _f in fs:
                     if _f.endswith('txt') and str(ffind) in _f:

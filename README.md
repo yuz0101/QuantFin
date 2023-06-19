@@ -82,7 +82,7 @@ from QuantFin.PanelRegs import multiregressions
 formulas = {
     "Customised FixedEffects": "rets ~ 1 + mom', fe(permno year)",
     "Filter data": "rets ~ 1 + mom if date >= '2000-01-01', fe(permno year)",
-    "Cluster Stand Errors": "rets ~ 1 + mom if date >= '2000-01-01', fe(permno year), cluster(permno)",
+    "Cluster Standard Errors": "rets ~ 1 + mom if date >= '2000-01-01', fe(permno year), cluster(permno)",
     "FamaMacbeth": "rets ~ 1 + mom if date >= '2000-01-01', famamacbeth, robust",
     "logFunct": "mom ~ 1 + log(marketCap) + bm + illiq + turnover, fe(permno date), cluster(permno)",
     "Interaction": "mom ~ 1 + log(marketCap)##bm + illiq +turnover, fe(permno date), cluster(date)" 

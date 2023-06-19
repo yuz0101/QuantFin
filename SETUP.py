@@ -17,12 +17,12 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 setup(
     name="QuantFin",
     version="0.0.1",
-    description="Library for Research on Asset Pricing",
+    description="Library for Academic Research on Asset Pricing",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://example.readthedocs.io/",
+    url="https://github.com/yuz0101/QuantFin",
     author="Stephen Zhang",
-    author_email="stephen.z0@outlook.com",
+    author_email="stephen_se@outlook.com",
     license="MIT",
     classifiers=[
         "Intended Audience :: Developers",
