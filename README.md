@@ -2,6 +2,11 @@
 A toolkit for asset pricing.
 Working... ...
 
+### Install
+
+```consol
+pip install -i https://test.pypi.org/simple/ QuantFin==0.0.1
+```
 
 ### Get started
 

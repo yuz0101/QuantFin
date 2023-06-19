@@ -2,4 +2,4 @@ pandas
 numpy
 requests
 linearmodels
-statmodels
+statsmodels

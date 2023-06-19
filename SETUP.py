@@ -27,7 +27,7 @@ setup(
     url="https://github.com/yuz0101/QuantFin",
     download_url='https://github.com/yuz0101/QuantFin/archive/refs/tags/Test.tar.gz',
     keywords=['ACADEMIC', 'EMPIRICAL', 'FIANCE', 'RESEARCH', 'QUANT', 'PORTFOLIO'],
-    install_requires=["numpy", "pandas", "linearmodels", "statemodels", "requests"],
+    install_requires=["numpy", "pandas", "linearmodels", "statsmodels", "requests"],
     
     classifiers=[
         "Intended Audience :: Developers",
