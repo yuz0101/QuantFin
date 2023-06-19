@@ -16,14 +16,19 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 # This call to setup() does all the work
 setup(
     name="QuantFin",
+    packages=["QuantFin"],
     version="0.0.1",
+    license="MIT",
     description="Library for Academic Research on Asset Pricing",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yuz0101/QuantFin",
     author="Stephen Zhang",
     author_email="stephen_se@outlook.com",
-    license="MIT",
+    url="https://github.com/yuz0101/QuantFin",
+    download_url='https://github.com/yuz0101/QuantFin/archive/refs/tags/Test.tar.gz',
+    keywords=['ACADEMIC', 'EMPIRICAL', 'FIANCE', 'RESEARCH', 'QUANT', 'PORTFOLIO'],
+    install_requires=["numpy", "pandas", "linearmodels", "statemodels", "requests"],
+    
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
@@ -34,7 +39,5 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent"
     ],
-    packages=["QuantFin"],
-    include_package_data=True,
-    install_requires=["numpy", "pandas", "linearmodels", "statemodels", "requests"]
+
 )
