@@ -1,39 +1,39 @@
 # QuantFin
 A toolkit for asset pricing.
-Working........
+Working... ...
 
 
 ### Get started
 
-Momentum Effects
+#### Momentum Effects
 
-1) Calculating momentum effects (MOM)
-2) Sorting stocks on MOM and divide samples into 10 deciles
+1) Calculat momentum value on stocks (MOM)
+2) Sort stocks on MOM into 10 decile portfolio
+3) Report 
 
 ```Python
 
 import numpy as np
 import pandas as pd
-from QuantFin import univariate_sorting, rollingGeometricReturn
+from QuantFin import univariate_sorting, cal_portfolio_rets
 
-# Read CRSP dataset, downloaded from WRDS
+# Read CRSP monthly dataset (Source: WRDS)
 crsp = ''
 crsp.columns = crsp.columns.str.lower()
 
 """
-Sample Screens
+Screen the sample
 
 1) The sample includes only stocks that are ordinary common share. E.g., shrcd == 10 or 11.
 2) The sample includes only stocks listed on NYSE, AMEX or NASDAQ. E.g., exchcd is 1,2,3,31,32 or 33.
 3) The sample includes only stocks with valid share price. E.g., prc > 0.
-
-crsp = crsp.query("shrcd==10 or shrcd==11")
-crsp = crsp.query("exchcd==1 or exchcd==31 or exchcd==2 or exchcd==32 or exchcd==3 or exchcd==33")
-crsp = crsp.query('prc > 0')
 """
 
-crsp = crsp.drop_duplicates(['date', 'permno'])
-crsp = crsp.set_index(['date', 'permno'])
+crsp.query("shrcd==10 or shrcd==11", inplcae=True)
+crsp.query("exchcd==1 or exchcd==31 or exchcd==2 or exchcd==32 or exchcd==3 or exchcd==33", inplcae=True)
+crsp.query('prc > 0', inplcae=True)
+crsp.drop_duplicates(['date', 'permno'], inplcae=True)
+crsp.set_index(['date', 'permno'], inplcae=True)
 crsp = crsp['ret']
 
 """
@@ -55,25 +55,38 @@ mom = mom.merge(crsp, on=['permno', 'date'], how='left')
 # sort stocks based on last period's mom, mom(t-1)
 mom = mom.sort_values(['permno', 'date'])
 mom.loc[:, 'mom(t-1)'] = mom.groupby(['permno'])['mom'].shift(1)
-mom = univariate_sorting(mom, on='mom(t-1)', jdate='date', method='smart', label='port')
+mom = univariate_sorting(mom, on='mom(t-1)', time_label='date', port_label='port', method='smart')
 
-# mom sample data summary statistics
+# calculate returns on the formed portfolis
 sample = mom.query("'1963-06-30' <= date <= '2021-12-31'")
-sample.groupby(['date'])['mom'].describe().mean()
-sample.groupby(['date'])['mom'].skew().mean()
-sample.groupby(['date'])['mom'].apply(lambda x: x.kurt()).mean()
-samp_ret = sample.groupby(['port', 'date'])['ret'].mean().unstack().T
-np.log(samp_ret+1).cumsum().plot(figsize=(16,8))
+samp_ret = cal_portfolio_rets(panel_data=sample, ret_label='ret', time_label='date', port_label='port')
+#samp_ret = cal_portfolio_rets(panel_data=sample, ret_label='ret', time_label='date', port_label='port', weight_on='marketCap') # calcualte value-weighted returns for portfolios
+np.log(samp_ret+1).cumsum().plot(figsize=(16,8), title='Momentum Portfolios Cumulative Returns')
 ```
 ![Momentum Portfolios Returns](momPortsRets.png)
 
-Show the performance summary of portfolios, including mean returns and alphas(FF3 or FF5):
+Print summary performance of portfolios, including mean returns and alphas(FF5):
 ```python
 from QuantFin import Performance
-# Assume rets is a dataframe of your portfolio monthly returns with 
-# column names of portfolio labels and an index of datetime (if model is specified).
 samp_ret['10-1'] = samp_ret.loc[:, 10] - samp_ret.loc[:, 1]
-print(Performance(samp_ret, model='FF5').summary())
+print(Performance(samp_ret, models=['FF5']).summary())
 ```
 
 ![Momentum Portfolios Returns](momRetsMean2.png)
+
+Run PanelOLS/Fama-MacBeth regressions and collect results:
+
+```python
+from QuantFin.PanelRegs import multiregressions
+
+formulas = {
+    "Customised FixedEffects": "rets ~ 1 + mom', fe(permno year)",
+    "Filter data": "rets ~ 1 + mom if date >= '2000-01-01', fe(permno year)",
+    "Cluster Stand Errors": "rets ~ 1 + mom if date >= '2000-01-01', fe(permno year), cluster(permno)",
+    "FamaMacbeth": "rets ~ 1 + mom if date >= '2000-01-01', famamacbeth, robust",
+    "logFunct": "mom ~ 1 + log(marketCap) + bm + illiq + turnover, fe(permno date), cluster(permno)",
+    "Interaction": "mom ~ 1 + log(marketCap)##bm + illiq +turnover, fe(permno date), cluster(date)" 
+}
+
+multiregressions(formulas, data=sample)
+```

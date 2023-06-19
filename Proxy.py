@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from numpy import exp, log, nan
+from pandas import (DataFrame, Series, concat, merge, qcut, read_csv,
+                    to_datetime)
 from pandas.tseries.offsets import BMonthEnd
-from pandas import qcut, DataFrame, Series, merge, concat, to_datetime, read_csv
-from numpy import nan, log, exp
 
 
 class Lottery:

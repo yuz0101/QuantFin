@@ -36,5 +36,5 @@ setup(
     ],
     packages=["QuantFin"],
     include_package_data=True,
-    install_requires=["numpy", "pandas", "linearmodels", "statemodels"]
+    install_requires=["numpy", "pandas", "linearmodels", "statemodels", "requests"]
 )

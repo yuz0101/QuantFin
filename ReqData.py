@@ -11,6 +11,9 @@ from bs4 import BeautifulSoup as bs
 from pandas import DataFrame, read_csv, read_excel, to_datetime
 from pandas.tseries.offsets import BMonthEnd, BYearEnd
 
+from QuantFin.HandleError import InputError
+
+
 class Req:
     def __init__(self, fpath='./dataLib/'):
         self.fpath = fpath
@@ -36,6 +39,7 @@ class Req:
         res = self._download_file(url, name)
         with open(self.fpath+name, 'wb') as f:
             f.write(res.content)
+        return res
     
     def _download_store_csv(self, url, name):
         res = self._download_file(url, name)
@@ -178,6 +182,10 @@ class KenFrenchLib(Req):
             _freq = 'daily'
         elif freq in ['weekly', 'w', 'week']:
             _freq = 'weekly'
+        else:
+            raise InputError(
+                "Incorrect frequency level. Options are 'ANNUAL', 'WEEKLY', 'DAILY', 'MONTHLY'"
+            )
 
         if factors == 'ff3':
             factors = 'F-F_Research_Data_Factors'
@@ -185,6 +193,10 @@ class KenFrenchLib(Req):
             factors = 'F-F_Research_Data_5_Factors_2x3'
         elif factors == 'mom':
             factors = 'F-F_Momentum_Factor'
+        else:
+            raise InputError(
+                "Incorrect factor name. Options are 'MOM', 'FF3', 'FF5' or other specific dataset names listed on site."
+            )
         
         if _freq in ['annual', 'monthly']:
             url = self.domain + factors + '_CSV.zip'
