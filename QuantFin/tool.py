@@ -62,12 +62,12 @@ def winsorize(data: DataFrame, var: str, interval: list, by: list = None, new_la
     '''
     if by:
         df = data[by+[var]].set_index(by)
-        df['u'] = data.groupby(by)[var].quantile(interval[0])
-        df['d'] = data.groupby(by)[var].quantile(interval[1])
+        df['u'] = data.groupby(by)[var].quantile(interval[1])
+        df['d'] = data.groupby(by)[var].quantile(interval[0])
     else:
         df = data[[var]]
-        df['u'] = data[var].quantile(interval[0])
-        df['d'] = data[var].quantile(interval[1])        
+        df['u'] = data[var].quantile(interval[1])
+        df['d'] = data[var].quantile(interval[0])        
     df.loc[df[var]>df['u'], var] = df.loc[df[var]>df['u'], 'u']
     df.loc[df[var]<df['d'], var] = df.loc[df[var]<df['d'], 'd']
     df.index = data.index
