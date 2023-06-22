@@ -166,10 +166,7 @@ def _panel_reg(
             debiased=debiased, auto_df=debiased, count_effects=count_effects, **cov_config
             )
 
-def _get_results(
-        model, model_label, dep_label, decimal_coef: int = 2, decimal_tvalue: int = 2, 
-        decimal_rsquared: int = 2, coef_in_percentage: bool = True, varname_in_cap: bool = False
-        ):
+def _get_results(model, model_label, dep_label, decimal_coef, decimal_tvalue, decimal_rsquared, coef_in_percentage, varname_in_cap):
     '''This function returns a summary of regression results with various formatting options.
     
     Parameters
@@ -230,35 +227,51 @@ def _get_results(
     _stats = _stats.rename(model_label).to_frame()
     return _stats
 
-def multiregs(formulas, data, entity_label, time_label, **kwargs):
-    '''
-    This function performs multiple regressions on a panel data set and returns the statistical results.
+def multiregs(formulas, data, entity_label, time_label, decimal_coef: int = 2, decimal_tvalue: int = 2, decimal_rsquared: int = 2, coef_in_percentage: bool = True, varname_in_cap: bool = False, **kwargs):
+    '''The function `multiregs` performs multiple regressions on panel data and returns the results in a
+    formatted DataFrame.
     Special features:
-        1. Customize regression with stata-like string, e.g., 
-                "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid, year, month), cluster(firmid)"
-                "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid, year, month), robust"
-                "y ~ 1 + x1 + x2 if 2010<=year<=2020, famamacbeth, robust"
-        2. Return academic-like table summarising statistical results.
+    1. Customize regression with stata-like string, e.g., 
+            "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid, year, month), cluster(firmid)"
+            "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid, year, month), robust"
+            "y ~ 1 + x1 + x2 if 2010<=year<=2020, famamacbeth, robust"
+    2. Return academic-like table summarising statistical results.
     
     Parameters
     ----------
     formulas
-        a dictionary where the keys are names of regression models and the values are formulas for the
-    models in the form of strings
+        A dictionary of regression formulas to be run, where the keys are the names of the formulas and the
+    values are the formulas themselves.
     data
         The data parameter is a pandas DataFrame containing the data to be used in the regression analysis.
     entity_label
-        The label for the entity variable in the dataset.
+        The name of the column in the data that represents the entities (e.g. countries, companies,
+    individuals).
     time_label
-        The label for the time variable in the dataset.
+        The name of the time variable in the dataset.
+    decimal_coef : int, optional
+        The number of decimal places to display for the regression coefficients.
+    decimal_tvalue : int, optional
+        The number of decimal places to display for the t-values in the regression results.
+    decimal_rsquared : int, optional
+        The number of decimal places to round the R-squared value to in the output.
+    coef_in_percentage : bool, optional
+        This parameter determines whether the coefficients in the regression results should be displayed as
+    percentages or not. If set to True, the coefficients will be displayed as percentages. If set to
+    False, the coefficients will be displayed as decimals.
+    varname_in_cap : bool, optional
+        This parameter determines whether variable names should be displayed in capital letters or not. If
+    set to True, variable names will be displayed in capital letters. If set to False, variable names
+    will be displayed as they are in the data.
     
     Returns
     -------
-        a pandas DataFrame containing the results of multiple regressions performed on the input data using
-    the input formulas. The DataFrame includes statistics such as coefficients, standard errors,
-    t-values, p-values, and R-squared values for each regression.
+        a pandas DataFrame containing the results of running multiple regressions on the input data using
+    the input formulas. The DataFrame includes coefficients, t-values, R-squared values, and other
+    statistics for each regression.
     
     '''
+
     if not [entity_label, time_label] == data.index.names:
         data = data.set_index([entity_label, time_label], drop=False)
 
@@ -269,7 +282,7 @@ def multiregs(formulas, data, entity_label, time_label, **kwargs):
         model = _panel_reg(formulas[i], _data, **kwargs)
         del _data
         dep = formulas[i].replace(' ', '').split('~')[0]
-        _stats = _get_results(model, i, dep)
+        _stats = _get_results(model, i, dep, decimal_coef, decimal_tvalue, decimal_rsquared, coef_in_percentage, varname_in_cap)
         stats = stats.merge(_stats, how='outer',
                             right_index=True, left_index=True)
     
