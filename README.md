@@ -82,7 +82,7 @@ print(Performance(samp_ret, models=['FF5']).summary())
 Run PanelOLS/Fama-MacBeth regressions and collect results:
 
 ```python
-from QuantFin.PanelRegs import multiregressions
+from QuantFin import multiregs
 
 formulas = {
     "Customised FixedEffects": "rets ~ 1 + mom', fe(permno year)",
@@ -93,5 +93,5 @@ formulas = {
     "Interaction": "mom ~ 1 + log(marketCap)##bm + illiq +turnover, fe(permno date), cluster(date)" 
 }
 
-multiregressions(formulas, data=sample)
+multiregs(formulas, data=sample)
 ```
