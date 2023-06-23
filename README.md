@@ -5,7 +5,7 @@ Working... ...
 ### Install
 
 ```consol
-pip install QuantFin==0.0.3
+pip install QuantFin
 ```
 
 ### Get started
