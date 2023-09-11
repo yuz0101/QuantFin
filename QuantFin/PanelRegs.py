@@ -232,8 +232,8 @@ def multiregs(formulas, data, entity_label, time_label, decimal_coef: int = 2, d
     formatted DataFrame.
     Special features:
     1. Customize regression with stata-like string, e.g., 
-            "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid, year, month), cluster(firmid)"
-            "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid, year, month), robust"
+            "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid year month), cluster(firmid)"
+            "y ~ 1 + x1 + x2 if 2010<=year<=2020, fe(firmid year month), robust"
             "y ~ 1 + x1 + x2 if 2010<=year<=2020, famamacbeth, robust"
     2. Return academic-like table summarising statistical results.
     

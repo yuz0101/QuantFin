@@ -20,16 +20,23 @@ class OLS:
     def r2(self):
         return self.mod.rsquared_adj
 
-def ols_regs(formulas, data, decimal: int = 2):
-    """
-    developing
-    """
+def add_(x):
+    if x != '':
+        return f"({x})"
+    else:
+        return ""
+
+def ols_regs(formulas, data):
     stats = []
     rsquared_adjs = []
     nobss = []
     for colname in formulas.keys():
         formula = formulas[colname]
-        model = sm.OLS.from_formula(formula, data=data).fit(cov_type='HAC', cov_kwds={'maxlags':6})
+        if 'if' in formula:
+            formula, condition = formula.replace(' ', '').split(',if')
+            model = sm.OLS.from_formula(formula, data=data.query(condition)).fit(cov_type='HAC', cov_kwds={'maxlags':6})
+        else:
+            model = sm.OLS.from_formula(formula, data=data).fit(cov_type='HAC', cov_kwds={'maxlags':6})
         stat = concat([model.params, model.tvalues, model.pvalues], axis=1)
         stat.columns = ['coef', 'tvalue', 'pvalue']
         stat = stat.unstack().rename(colname)
@@ -47,7 +54,7 @@ def ols_regs(formulas, data, decimal: int = 2):
     stats.loc[['pvalue'], :] = stats.loc[['pvalue'], :].applymap(lambda x:  int(x)*'*')
     stats.loc[['coef'], :] *= 100
 
-    stats.loc[['coef', 'tvalue'], :] = stats.loc[['coef', 'tvalue'], :].applymap(lambda x: f'{x: .{decimal}f}')
+    stats.loc[['coef', 'tvalue'], :] = stats.loc[['coef', 'tvalue'], :].applymap(lambda x: format(x, ".2f"))
     stats = stats.replace("nan", "")
     df = stats.loc['coef', :] + stats.loc['pvalue', :]
     df.index = stats.loc[['coef'], :].index
@@ -56,6 +63,7 @@ def ols_regs(formulas, data, decimal: int = 2):
     stats = stats.swaplevel().sort_index()
     stats = concat([stats, DataFrame({('Adj R2 (%)',''): rsquared_adjs, ('Obs',''):nobss}, index=stats.columns).T])
 
-    stats.loc[['Adj R2 (%)'], :] = (stats.loc[['Adj R2 (%)'], :]*100).applymap(lambda x: f'{x: .{decimal}f}')
+    stats.loc[['Adj R2 (%)'], :] = (stats.loc[['Adj R2 (%)'], :]*100).applymap(lambda x: format(x, ".2f"))
     stats.loc[['Obs'], :] = stats.loc[['Obs'], :].astype(int)
+    stats.loc[(slice(None), 'tvalue'), :] = stats.loc[(slice(None), 'tvalue'), :].apply(lambda x: x.apply(lambda y: add_(y)))
     return stats

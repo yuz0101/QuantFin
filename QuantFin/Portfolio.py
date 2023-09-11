@@ -11,7 +11,7 @@ from QuantFin.ReqData import KenFrenchLib
 class Performance:
 
     def __init__(self, data: DataFrame, freq: str = 'M', models: list = ['CAPM', 'FF3', 'FF4'],
-                 datename: str = 'date'):
+                 time_label: str = 'date'):
         """
         Parameters
         ----------
@@ -29,7 +29,7 @@ class Performance:
             models are None (for not estimating alpha), Fama-French-3 factor (FF3), 
             Fama-French-5 factor (FF5), and FF3 + MOM (FF4). Default is FF3.
 
-        datename: str
+        time_label: str
             Indicate the name of datetime index. Default is 'date'
 
         capm: bool
@@ -56,7 +56,7 @@ class Performance:
             raise InputError(
                 "The arg of 'freq' should be either 'D' for daily, 'M' for monthly or 'Y' for yearly"
             )
-        self.datename = datename
+        self.time_label = time_label
 
     def _get_factor_data(self, model):
         if model.lower() == 'ff4':
@@ -65,7 +65,7 @@ class Performance:
             _f = _f.merge(_mom, right_index=True, left_index=True, how='inner')
         else:
             _f = KenFrenchLib().get_factors(factors=model, freq=self.freq)
-        _f.index = _f.index.rename(self.datename)
+        _f.index = _f.index.rename(self.time_label)
         try:
             _f = _f[_f.columns.drop('RF')]
         except:  # pylint: disable=bare-except
