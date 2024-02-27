@@ -204,8 +204,8 @@ def _get_results(model, model_label, dep_label, decimal_coef, decimal_tvalue, de
     _pv = _pv.mask(_pv <= .10, 1)
     _pv = _pv.mask((_pv > .10) & (_pv < 1), 0)
     _pv = _pv.apply(lambda x: int(x)*'*')
-    params = (model.params*percent).apply(lambda x: f'{x: .{decimal_coef}f}') + _pv
-    tstats = (model.tstats).apply(lambda x: f'{x: .{decimal_tvalue}f}')
+    params = (model.params*percent).apply(lambda x: f'{x:.{decimal_coef}f}') + _pv
+    tstats = (model.tstats).apply(lambda x: f'{x:.{decimal_tvalue}f}')
     tstats = '(' + tstats.astype(str) + ')'
     tstats.index = tstats.index + " (T-value)"
     _stats = concat([params, tstats]).sort_index()

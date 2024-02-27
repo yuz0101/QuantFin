@@ -17,7 +17,7 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 setup(
     name="QuantFin",
     packages=["QuantFin"],
-    version="0.0.6",
+    version="0.0.7",
     license="MIT",
     description="Library for Academic Research on Asset Pricing",
     long_description=long_description,
