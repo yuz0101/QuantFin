@@ -34,7 +34,7 @@ def geometric_ret(ret: DataFrame, window: int, decimals=4):
     _df = _df.replace(0, nan)
     return _df
 
-def winsorize(data: pd.DataFrame, var: str, interval: str, by: list = None, new_label: str = None, cutoff: bool = False):
+def winsorize(data: DataFrame, var: str, interval: str, by: list = None, new_label: str = None, cutoff: bool = False):
     '''The function winsorize applies Winsorization to a given variable in a DataFrame, either for the
     entire DataFrame or by groups specified in a list.
     
