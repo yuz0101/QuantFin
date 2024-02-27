@@ -34,55 +34,65 @@ def geometric_ret(ret: DataFrame, window: int, decimals=4):
     _df = _df.replace(0, nan)
     return _df
 
-def winsorize(data: DataFrame, var: str, interval: list, by: list = None, new_label: str = None, cutoff: bool = True):
-    '''The function winsorize applies Winsorization to a specified variable in a DataFrame, either for the
-    entire DataFrame or by a specified group, and can either replace values outside of a specified
-    interval with the interval bounds or with NaN values.
+def winsorize(data: pd.DataFrame, var: str, interval: str, by: list = None, new_label: str = None, cutoff: bool = False):
+    '''The function winsorize applies Winsorization to a given variable in a DataFrame, either for the
+    entire DataFrame or by groups specified in a list.
     
     Parameters
     ----------
     data : DataFrame
         a pandas DataFrame containing the data to be winsorized
     var : str
-        The name of the variable/column in the DataFrame that needs to be winsorized.
-    interval : list
-        The interval parameter is a list containing two values that represent the lower and upper quantiles
-    to use for winsorizing the data. For example, if interval=[0.05, 0.95], the function will replace
-    values below the 5th percentile with the 5th percentile value and
+        The variable/column in the DataFrame that needs to be winsorized.
+    interval : str
+        a str containing two values representing the upper and lower percentile thresholds for winsorization.
     by : list
         A list of column names to group the data by before applying the winsorization. If not provided, the
-    function will apply the winsorization to the entire dataset.
+    winsorization will be applied to the entire dataset.
     new_label : str
         The new label parameter is an optional parameter that allows the user to rename the column label of
-    the resulting DataFrame. If this parameter is not specified, the resulting DataFrame will have the
-    same label as the original DataFrame.
-    cutoff : bool, optional
-        A boolean parameter that determines whether values outside the specified interval should be
-    replaced with the interval boundaries or set to NaN (default is True, meaning values will be
-    replaced with the interval boundaries).
+    the resulting DataFrame. If this parameter is not specified, the original label of the variable
+    being winsorized will be used.
     
     Returns
     -------
-        a pandas DataFrame with the winsorized values of the specified variable. The variable can be
-    winsorized either for the entire dataset or by groups specified in the "by" parameter. The
-    winsorization is done by replacing values above the upper quantile with the upper quantile value and
-    values below the lower quantile with the lower quantile value. If the "cutoff"
+        a pandas Series object with the winsorized values of the specified variable. If a new label is
+    provided, the Series is also renamed with the new label.
     
     '''
+    # interval = '[.01, .99)'
+    interval = interval.replace(' ', '')
+    dc = interval[0]
+    uc = interval[-1]
+    d, u = interval[1:-1].split(',')
+    d, u = float(d), float(u)
+    if not ((dc=='[' or dc=='(') and (uc==']'or uc==')')):
+        print("Interval should be started from '(' or '[' and ended with ')' or ']'")
+    if not (0<=d<=1 and 0<=u<=1):
+        print("Percentiles should be between 0 and 1")
+    
     if by:
-        df = data[by+[var]].set_index(by)
-        df.loc[:, 'u'] = data.groupby(by)[var].quantile(interval[1])
-        df.loc[:, 'd'] = data.groupby(by)[var].quantile(interval[0])
+        df = data.loc[:, by+[var]].set_index(by).copy()
+        df.loc[:, 'u'] = df.groupby(by)[var].quantile(u)
+        df.loc[:, 'd'] = df.groupby(by)[var].quantile(d)
     else:
-        df = data[[var]]
-        df.loc[:, 'u'] = data[var].quantile(interval[1])
-        df.loc[:, 'd'] = data[var].quantile(interval[0])
+        df = data.loc[:, [var]].copy()
+        df.loc[:, 'u'] = df.loc[:, var].quantile(u)
+        df.loc[:, 'd'] = df.loc[:, var].quantile(d)
+    
     if cutoff:
-        df.loc[df[var]>df['u'], var] = df.loc[df[var]>df['u'], 'u']
-        df.loc[df[var]<df['d'], var] = df.loc[df[var]<df['d'], 'd']
+        if '(' == dc:
+            df.loc[df[var]<df['d'], var] = nan
+        if ')' == uc:
+            df.loc[df[var]>df['u'], var] = nan
+        if '[' == dc:
+            df.loc[df[var]<=df['d'], var] = nan
+        if ']' == uc:
+            df.loc[df[var]>=df['u'], var] = nan
     else:
-        df.loc[df[var]>df['u'], var] = nan
-        df.loc[df[var]<df['d'], var] = nan
+        df.loc[df[var]<df['d'], var] = df.loc[df[var]<df['d'], 'd']
+        df.loc[df[var]>df['u'], var] = df.loc[df[var]>df['u'], 'u']
+            
     df.index = data.index
     df = df[var]
     if new_label:
