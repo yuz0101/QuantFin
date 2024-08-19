@@ -6,4 +6,4 @@ from QuantFin.ReqData import KenFrenchLib
 from QuantFin.tool import winsorize, geometric_ret
 from QuantFin._regression import ols_regs
 
-__version__ = "0.0.9"
+__version__ = "0.0.10"

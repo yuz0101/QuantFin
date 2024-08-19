@@ -17,7 +17,7 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 setup(
     name="QuantFin",
     packages=["QuantFin"],
-    version="0.0.9",
+    version="0.0.10",
     license="MIT",
     description="Library for Academic Research on Asset Pricing",
     long_description=long_description,
@@ -25,7 +25,7 @@ setup(
     author="Stephen Zhang",
     author_email="stephen_se@outlook.com",
     url="https://github.com/yuz0101/QuantFin",
-    download_url='https://github.com/yuz0101/QuantFin/archive/refs/tags/0.0.9.zip',
+    download_url='https://github.com/yuz0101/QuantFin/archive/refs/tags/0.0.10',
     keywords=['ACADEMIC', 'EMPIRICAL', 'FIANCE', 'RESEARCH', 'QUANT', 'PORTFOLIO'],
     install_requires=["numpy", "pandas", "linearmodels", "statsmodels", "requests"],
     

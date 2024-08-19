@@ -182,8 +182,8 @@ def cal_portfolio_returns(panel_data: DataFrame, ret_label: str, time_label: str
         _l = [port_label] + _l
     if weight_on:
         panel_data = panel_data[[ret_label, weight_on] + _l]
-        panel_data[weight_on] = panel_data[ret_label] / \
-            panel_data[ret_label] * panel_data[weight_on]
+        panel_data.loc[:, weight_on] = panel_data.loc[:, ret_label] / \
+            panel_data.loc[:, ret_label] * panel_data.loc[:, weight_on]
         value_weight = panel_data.groupby(_l)[weight_on]\
             .sum().rename('vw').reset_index()
         panel_data = panel_data.merge(value_weight, on=_l, how='left')

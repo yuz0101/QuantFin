@@ -12,7 +12,7 @@ pip install QuantFin
 
 #### Momentum Effects
 
-1) Calculat momentum value on stocks (MOM)
+1) Calculate momentum value on stocks (MOM)
 2) Sort stocks on MOM into 10 decile portfolio
 3) Report 
 

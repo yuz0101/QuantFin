@@ -35,32 +35,43 @@ def geometric_ret(ret: DataFrame, window: int, decimals=4):
     return _df
 
 def winsorize(data: DataFrame, var: str, interval: str, by: list = None, new_label: str = None, cutoff: bool = False):
-    '''The function winsorize applies Winsorization to a given variable in a DataFrame, either for the
-    entire DataFrame or by groups specified in a list.
+    '''The function `winsorize` takes a DataFrame, a variable name, an interval, optional grouping
+    variables, and optional parameters to winsorize the variable values within the specified interval.
     
     Parameters
     ----------
     data : DataFrame
-        a pandas DataFrame containing the data to be winsorized
+        The `data` parameter is expected to be a DataFrame containing the dataset on which you want to
+    perform winsorization. It should include the variable specified in the `var` parameter that you want
+    to winsorize.
     var : str
-        The variable/column in the DataFrame that needs to be winsorized.
+        The `var` parameter in the `winsorize` function refers to the column name in the DataFrame `data`
+    that you want to winsorize. It is the variable for which you want to apply the winsorization
+    procedure.
     interval : str
-        a str containing two values representing the upper and lower percentile thresholds for winsorization.
+        The `interval` parameter in the `winsorize` function specifies the range of percentiles to be used
+    for winsorization. It is a string that represents the lower and upper bounds of the interval. For
+    example, if `interval = '[.01, .99)'`, it means that 1% <= data < 99%.
     by : list
-        A list of column names to group the data by before applying the winsorization. If not provided, the
-    winsorization will be applied to the entire dataset.
+        The `by` parameter in the `winsorize` function is used to specify a list of columns to group the
+    data by before applying the winsorization process. This parameter allows you to perform
+    winsorization within groups defined by the columns specified in the `by` list. If you do
     new_label : str
-        The new label parameter is an optional parameter that allows the user to rename the column label of
-    the resulting DataFrame. If this parameter is not specified, the original label of the variable
-    being winsorized will be used.
+        The `new_label` parameter in the `winsorize` function is used to specify a new label for the
+    winsorized variable in the output DataFrame. If provided, the winsorized variable will be renamed
+    with the value of `new_label`. If not provided, the winsorized variable
+    cutoff : bool, optional
+        The `cutoff` parameter in the `winsorize` function determines whether the values outside the
+    specified interval should be replaced with NaN (missing values) or clipped to the nearest value
+    within the interval.
     
     Returns
     -------
-        a pandas Series object with the winsorized values of the specified variable. If a new label is
-    provided, the Series is also renamed with the new label.
+        The function `winsorize` returns a pandas Series containing the winsorized values of the specified
+    variable in the input DataFrame. If a new_label is provided, the Series is renamed accordingly
+    before being returned.
     
     '''
-    # interval = '[.01, .99)'
     interval = interval.replace(' ', '')
     dc = interval[0]
     uc = interval[-1]
@@ -103,22 +114,70 @@ class Volatility:
     """
     developing... ... 
     """
-    def _hist(self, df: DataFrame, window: int, minw: int) -> DataFrame:
-        return df.rolling(window, min_periods=minw).std()
+    def vol_hist_rolling(self, data: DataFrame, window: int, minw: int=12) -> DataFrame:
 
-    def _ewma(self, ret: DataFrame, burnin: int, lambda_: float=0.94):
-        ret2 = ret**2
-        ret2_burn = ret2[:burnin]
-        ret2_samp = ret2[burnin:]
-        time_line = list(ret2_samp.index)
-        sigma2_samp = ret2_burn.var().rename(time_line[0]).to_frame().T
+        '''The function `vol_hist_rolling` calculates the rolling standard deviation of a DataFrame with a
+        specified window size and minimum number of periods.
+        
+        Parameters
+        ----------
+        data : DataFrame
+            DataFrame - the input data frame containing the volume data for which rolling standard deviation
+        needs to be calculated.
+        window : int
+            The `window` parameter specifies the size of the moving window. It represents the number of
+        observations used for calculating the statistic at each step.
+        minw : int, optional
+            The `minw` parameter in the `vol_hist_rolling` function represents the minimum number of
+        observations required to have a non-null result at the beginning. In this case, it is set to a
+        default value of 12, meaning that the rolling standard deviation calculation will only start
+        producing results once
+        
+        Returns
+        -------
+            The function `vol_hist_rolling` is returning a DataFrame that contains the rolling standard
+        deviation of the input DataFrame `df` using a specified window size and minimum number of periods.
+        
+        '''
+        return data.rolling(window, min_periods=minw).std()
+
+    def vol_ewma(self, data: DataFrame, burnin: int, lambda_: float=0.94):
+        '''The function calculates the exponentially weighted moving average of squared returns using a
+        specified lambda value after a burn-in period.
+        
+        Parameters
+        ----------
+        data : DataFrame
+            The `data` parameter is expected to be a DataFrame containing the returns data.
+        burnin : int
+            The `burnin` parameter in the `vol_ewma` function is used to specify the number of initial
+        observations to be excluded from the calculation of the EWMA (Exponentially Weighted Moving Average)
+        volatility. These initial observations are typically considered as a "burn-in" period where the
+        lambda_ : float
+            The `lambda_` parameter in the `vol_ewma` function represents the decay factor used in the
+        Exponentially Weighted Moving Average (EWMA) calculation for volatility. It determines the weight
+        given to past observations in the calculation of the current volatility estimate.
+        
+        Returns
+        -------
+            The function `vol_ewma` returns a DataFrame `sigma2_samp` containing the exponentially weighted
+        moving average (EWMA) of squared returns calculated using the input DataFrame `ret`, a specified
+        burn-in period `burnin`, and a decay parameter `lambda_`.
+        
+        '''
+        data2 = data**2
+        data2_burn = data2[:burnin]
+        data2_samp = data2[burnin:]
+        time_line = list(data2_samp.index)
+        sigma2_samp = data2_burn.var().rename(time_line[0]).to_frame().T
         for i,t in enumerate(time_line[1:]):
             t_1 = time_line[i-1]
-            sigma2 = (1 - lambda_)*ret2_samp.loc[t_1, :] + lambda_*sigma2_samp.loc[t_1, :]
+            sigma2 = (1 - lambda_)*data2_samp.loc[t_1, :] + lambda_*sigma2_samp.loc[t_1, :]
             sigma2_samp.loc[t, :] = sigma2
         return sigma2_samp
     
-    def _garch(self):
+    def vol_garch(self):
+        
         pass
 
 class CumulativeReturn:
